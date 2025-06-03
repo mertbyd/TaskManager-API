@@ -1,0 +1,169 @@
+REPORT API TEST DOCUMENTATION FOR TESTUSER
+
+TESTUSER KULLANICI BİLGİLERİ
+==============================================================================
+User ID: 683ecc35bf67ada830fda7b3  
+Username: testuser  
+Email: test@example.com  
+Password: 123456 (hash: e10adc3949ba59abbe56e057f20f883e)  
+
+ADIM ADIM REPORT API TEST SENARYOLARI
+==============================================================================
+
+1. AUTHENTICATION - TESTUSER GİRİŞİ
+==============================================================================
+
+Step 1: Login İşlemi
+-----------------------
+POST /api/Auth/login
+Content-Type: application/json
+
+Request:
+{
+    "username": "testuser",
+    "password": "123456"
+}
+
+Beklenen Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": {
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        "user_id": "683ecc35bf67ada830fda7b3",
+        "username": "testuser",
+        "email": "test@example.com"
+    }
+}
+
+***ÖNEMLİ: Bu token'ı kopyala ve tüm sonraki isteklerde kullan***
+
+2. TEMEL RAPOR TESTLERİ
+==============================================================================
+
+Step 2: Belirli Bir Tarih İçin Günlük Rapor Alma
+----------------------------------------------------
+GET /api/Report/daily?date=2025-06-03
+Authorization: Bearer {token}
+
+Beklenen Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": {
+        "period": "daily",
+        "date": "2025-06-03T00:00:00.000Z",
+        "total_tasks": 10,
+        "completed_tasks": 0,
+        "pending_tasks": 10,
+        "in_progress_tasks": 0,
+        "tasks": [
+            {
+                "id": "683ecd50bf67ada830fda7b4",
+                "title": "Günlük Görev 1",
+                "description": "Her gün yapılması gereken rutin görev",
+                "status": "Pending",
+                "priority": 1,
+                "period": "daily",
+                "created_at": "2025-06-03T10:24:16.814Z"
+            },
+            {
+                "id": "683ecd5bbf67ada830fda7b5",
+                "title": "Günlük Görev 2",
+                "description": "Sabah kontrolü ve planlama",
+                "status": "Pending",
+                "priority": 2,
+                "period": "daily",
+                "created_at": "2025-06-03T10:24:27.784Z"
+            }
+        ]
+    }
+}
+
+Step 3: Belirli Bir Tarih İçin Haftalık Rapor Alma
+-----------------------------------------------------
+GET /api/Report/weekly?date=2025-06-03
+Authorization: Bearer {token}
+
+Beklenen Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": {
+        "period": "weekly",
+        "start_date": "2025-06-01T00:00:00.000Z",
+        "end_date": "2025-06-07T00:00:00.000Z",
+        "total_tasks": 15,
+        "completed_tasks": 0,
+        "pending_tasks": 15,
+        "in_progress_tasks": 0,
+        "tasks": [
+            {
+                "id": "683ecd50bf67ada830fda7b4",
+                "title": "Günlük Görev 1",
+                "description": "Her gün yapılması gereken rutin görev",
+                "status": "Pending",
+                "priority": 1,
+                "period": "daily",
+                "created_at": "2025-06-03T10:24:16.814Z"
+            },
+            {
+                "id": "683ecdd7bf67ada830fda7be",
+                "title": "Haftalık Görev 1",
+                "description": "Haftalık proje durum toplantısı",
+                "status": "Pending",
+                "priority": 2,
+                "period": "weekly",
+                "created_at": "2025-06-03T10:26:31.330Z"
+            }
+        ]
+    }
+}
+
+Step 4: Belirli Bir Tarih İçin Aylık Rapor Alma
+--------------------------------------------------
+GET /api/Report/monthly?date=2025-06-03
+Authorization: Bearer {token}
+
+Beklenen Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": {
+        "period": "monthly",
+        "start_date": "2025-06-01T00:00:00.000Z",
+        "end_date": "2025-06-30T23:59:59.000Z",
+        "total_tasks": 15,
+        "completed_tasks": 0,
+        "pending_tasks": 15,
+        "in_progress_tasks": 0,
+        "tasks": [
+            {
+                "id": "683ecd50bf67ada830fda7b4",
+                "title": "Günlük Görev 1",
+                "description": "Her gün yapılması gereken rutin görev",
+                "status": "Pending",
+                "priority": 1,
+                "period": "daily",
+                "created_at": "2025-06-03T10:24:16.814Z"
+            },
+            {
+                "id": "683ecdd7bf67ada830fda7be",
+                "title": "Haftalık Görev 1",
+                "description": "Haftalık proje durum toplantısı",
+                "status": "Pending",
+                "priority": 2,
+                "period": "weekly",
+                "created_at": "2025-06-03T10:26:31.330Z"
+            }
+        ]
+    }
+}
+
+NOTLAR
+==============================================================================
+
+1. Tüm API istekleri JWT token gerektirmektedir.
+2. Rapor API'si şu anda sadece tarih parametresi ile filtrelemeye izin vermektedir.
+3. Günlük, haftalık ve aylık raporlar, ilgili zaman aralığında oluşturulan tüm görevleri içerir.
+4. Tarih parametresi verilmediğinde, bugün/bu hafta/bu ay için raporlar üretilir.
