@@ -1,0 +1,578 @@
+                        TASKMANAGER API - PROJE DOKÜMANTASYONU
+==============================================================================
+
+PROJE HAKKINDA
+==============================================================================
+
+TaskManager API, .NET 8 Web API framework'ü kullanılarak geliştirilmiş  
+bir görev yönetim sistemidir. MongoDB NoSQL veritabanı ile desteklenen bu API, 
+kullanıcıların görevlerini oluşturmasına, yönetmesine ve raporlamasına olanak 
+sağlar.
+
+Temel Özellikler:
+- Kullanıcı kayıt ve giriş sistemi (JWT Authentication)
+- CRUD görev işlemleri (Oluşturma, Okuma, Güncelleme, Silme)
+- Görev priorite yönetimi (1-Düşük, 2-Orta, 3-Yüksek)
+- Periyodik görev takibi (Günlük, Haftalık, Aylık)
+- Detaylı raporlama sistemi
+- RESTful API standartları
+
+Teknoloji Stack:
+- Framework: .NET 8 Web API
+- Database: MongoDB
+- Authentication: JWT (JSON Web Token)
+- Documentation: Swagger/OpenAPI
+- Architecture: N-Layer Architecture (Repository + Service Pattern)
+
+==============================================================================
+                            MİMARİ KATMANLAR VE İŞLEYİŞ
+==============================================================================
+
+1. CONTROLLER KATMANI (Presentation Layer)
+===========================================
+
+Konum: Controllers/
+Sorumluluk: HTTP isteklerini karşılama, yanıt oluşturma, authentication kontrolü
+
+AuthController.cs
+- Kullanıcı kayıt işlemleri
+- Giriş ve JWT token oluşturma
+- Kullanıcı sorgulama işlemleri
+
+TaskController.cs
+- Görev CRUD operasyonları
+- JWT ile korumalı endpoint'ler
+- Input validation kontrolü
+- Kullanıcı yetki doğrulama
+
+ReportController.cs
+- Günlük, haftalık, aylık raporlama
+- Tarih bazlı filtreleme
+- İstatistiksel veri sunumu
+
+Güvenlik Özellikleri:
+- JWT Token doğrulama
+- User-specific data access (kullanıcı sadece kendi verilerine erişir)
+- Input validation
+- HTTP status kod yönetimi
+
+2. SERVICE KATMANI (Business Logic Layer)
+==========================================
+
+Konum: Services/
+Sorumluluk: İş kuralları, validasyon, veri dönüşümleri
+
+AuthService.cs
+- Username benzersizlik kontrolü
+- Password MD5 hash'leme
+- JWT token claim'leri yönetimi
+- Kullanıcı doğrulama iş mantığı
+
+TaskService.cs
+- Görev iş kuralları (priority 1-3, period validation)
+- DTO'dan Model'e dönüşüm
+- Status geçiş kontrolleri
+- Kullanıcı yetki kontrolü
+
+ReportService.cs
+- Tarih aralığı hesaplamaları
+- Günlük/haftalık/aylık period'ların belirlenmesi
+- Performans metriklerinin hesaplanması
+
+JwtService.cs
+- JWT token oluşturma
+- Token validation
+- Claims yönetimi
+- Token expiration kontrolü
+
+İş Kuralları:
+- Priority: 1 (Düşük), 2 (Orta), 3 (Yüksek)
+- Period: "daily", "weekly", "monthly"
+- Status: "Pending", "InProgress", "Completed"
+- Username: 3-50 karakter, unique
+- Password: Minimum 6 karakter
+
+3. REPOSITORY KATMANI (Data Access Layer)
+==========================================
+
+Konum: Repositories/
+Sorumluluk: MongoDB CRUD işlemleri, sorgu optimizasyonu
+
+TaskRepository.cs
+- MongoDB görev koleksiyonu işlemleri
+- User ID bazlı filtreleme
+- Tarih aralığı sorguları
+- UPDATE ve PATCH operasyonları
+
+UserRepository.cs
+- Kullanıcı kayıt ve sorgulama
+- Username ve email unique kontrolü
+- Password hash doğrulama
+
+ReportRepository.cs
+- Tarih bazlı görev filtreleme
+- Aggregation pipeline'ları
+- Performans optimizeli sorgular
+
+MongoDB İşlemleri:
+- InsertOneAsync: Yeni kayıt ekleme
+- Find + ToListAsync: Veri sorgulama
+- UpdateOneAsync: Kayıt güncelleme
+- DeleteOneAsync: Kayıt silme
+- ReplaceOneAsync: Tam kayıt değiştirme
+
+4. MODEL VE DTO KATMANLARI
+===========================
+
+Models/ - Domain Entities
+TaskItem.cs: MongoDB görev koleksiyonu şeması
+User.cs: MongoDB kullanıcı koleksiyonu şeması
+
+DTOs/ - Data Transfer Objects
+- CreateTaskDto: Görev oluşturma
+- UpdateTaskDto: Tam güncelleme  
+- PatchTaskDto: Kısmi güncelleme
+- RegisterDto: Kullanıcı kayıt
+- LoginDto: Kullanıcı giriş
+- LoginResponseDto: Giriş yanıtı
+- ApiResponse: Standart API yanıt formatı
+
+==============================================================================
+                            VERİTABANI TASARIMI
+==============================================================================
+
+MONGODB COLLECTIONS
+====================
+
+1. Users Collection
+-------------------
+Şema:
+- _id: ObjectId (Primary Key)
+- username: string (unique)
+- email: string (unique)
+- password_hash: string (MD5 hash)
+- created_at: DateTime
+
+2. Tasks Collection  
+-------------------
+Şema:
+- _id: ObjectId (Primary Key)
+- title: string (max 200 karakter)
+- description: string (max 1000 karakter)
+- status: string (Pending/InProgress/Completed)
+- priority: int (1-3)
+- created_at: DateTime
+- user_id: string (Foreign Key)
+- update_date: DateTime
+- period: string (daily/weekly/monthly)
+
+MongoDB İndeksler:
+// Performans optimizasyonu için
+db.users.createIndex({ "username": 1 }, { unique: true })
+db.users.createIndex({ "email": 1 }, { unique: true })
+db.tasks.createIndex({ "user_id": 1, "created_at": -1 })
+db.tasks.createIndex({ "user_id": 1, "status": 1 })
+db.tasks.createIndex({ "user_id": 1, "period": 1 })
+
+==============================================================================
+                            API ENDPOINT DOKÜMANTASYONU
+==============================================================================
+
+KULLANICI VE TEST VERİLERİ
+===========================
+
+Mevcut Kullanıcı:
+Username: admin
+Email: admin@company.com
+Password: admin123 (hash: 0192023a7bbd73250516f069df18b500)
+User ID: 683da331c6442d28bb761de2
+
+AUTHENTICATION ENDPOINTS
+=========================
+
+1. Kullanıcı Girişi
+-------------------
+POST /api/Auth/login
+Content-Type: application/json
+
+Request:
+{
+    "username": "admin",
+    "password": "admin123"
+}
+
+Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": {
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        "user_id": "683da331c6442d28bb761de2",
+        "username": "admin",
+        "email": "admin@company.com"
+    }
+}
+
+2. Kullanıcı Kayıt
+------------------
+POST /api/Auth/register
+Content-Type: application/json
+
+Request:
+{
+    "username": "testuser",
+    "email": "test@example.com",
+    "password": "123456"
+}
+
+Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": {
+        "id": "ObjectId",
+        "username": "testuser",
+        "email": "test@example.com",
+        "created_at": "2025-06-03T10:30:00Z"
+    }
+}
+
+3. ID ile Kullanıcı Getirme
+---------------------------
+GET /api/Auth/getid/683da331c6442d28bb761de2
+
+Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": {
+        "id": "683da331c6442d28bb761de2",
+        "username": "admin",
+        "email": "admin@company.com",
+        "created_at": "2025-06-02T13:12:17.412Z"
+    }
+}
+
+4. Username ile Kullanıcı Getirme
+---------------------------------
+GET /api/Auth/getusername/admin
+
+Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": {
+        "id": "683da331c6442d28bb761de2",
+        "username": "admin",
+        "email": "admin@company.com",
+        "created_at": "2025-06-02T13:12:17.412Z"
+    }
+}
+
+TASK MANAGEMENT ENDPOINTS
+==========================
+
+5. Görev Oluşturma
+------------------
+POST /api/Task
+Authorization: Bearer {token}
+Content-Type: application/json
+
+Request:
+{
+    "title": "Test Görevi",
+    "description": "Bu bir test görevidir",
+    "priority": 2,
+    "period": "daily"
+}
+
+Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": {
+        "id": "ObjectId",
+        "title": "Test Görevi",
+        "description": "Bu bir test görevidir",
+        "priority": 2,
+        "status": "Pending",
+        "period": "daily",
+        "user_id": "683da331c6442d28bb761de2",
+        "created_at": "2025-06-03T10:30:00Z",
+        "update_date": "2025-06-03T10:30:00Z"
+    }
+}
+
+6. Kullanıcının Tüm Görevlerini Listeleme
+-----------------------------------------
+GET /api/Task/my-tasks
+Authorization: Bearer {token}
+
+Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": [
+        {
+            "id": "683dcea99757e4025ca6693e",
+            "title": "Aylık Rapor Hazırlama",
+            "description": "Her ayın son haftasında hazırlanması gereken bütçe raporu",
+            "status": "Pending",
+            "priority": 3,
+            "created_at": "2025-06-02T16:17:45.893Z",
+            "user_id": "683da331c6442d28bb761de2",
+            "update_date": "2025-06-02T16:17:45.893Z",
+            "period": "monthly"
+        },
+        {
+            "id": "683ddf63540cc09e61eddf4c",
+            "title": "Rapor Test Görevi 1",
+            "description": "Günlük raporda görünmeli",
+            "status": "Pending",
+            "priority": 3,
+            "created_at": "2025-06-02T17:29:07.877Z",
+            "user_id": "683da331c6442d28bb761de2",
+            "update_date": "2025-06-02T17:29:07.877Z",
+            "period": "daily"
+        }
+    ]
+}
+
+7. ID ile Tek Görev Getirme
+---------------------------
+GET /api/Task/683dcea99757e4025ca6693e
+Authorization: Bearer {token}
+
+Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": {
+        "id": "683dcea99757e4025ca6693e",
+        "title": "Aylık Rapor Hazırlama",
+        "description": "Her ayın son haftasında hazırlanması gereken bütçe raporu",
+        "status": "Pending",
+        "priority": 3,
+        "created_at": "2025-06-02T16:17:45.893Z",
+        "user_id": "683da331c6442d28bb761de2",
+        "update_date": "2025-06-02T16:17:45.893Z",
+        "period": "monthly"
+    }
+}
+
+8. Görev Tam Güncellemesi (PUT)
+-------------------------------
+PUT /api/Task/683dcea99757e4025ca6693e
+Authorization: Bearer {token}
+Content-Type: application/json
+
+Request:
+{
+    "title": "Aylık Mali Rapor Hazırlama",
+    "description": "Güncellenmiş açıklama - Her ayın son haftasında mali rapor",
+    "priority": 2,
+    "status": "InProgress"
+}
+
+Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": {
+        "id": "683dcea99757e4025ca6693e",
+        "title": "Aylık Mali Rapor Hazırlama",
+        "description": "Güncellenmiş açıklama - Her ayın son haftasında mali rapor",
+        "status": "InProgress",
+        "priority": 2,
+        "created_at": "2025-06-02T16:17:45.893Z",
+        "user_id": "683da331c6442d28bb761de2",
+        "update_date": "2025-06-03T11:00:00Z",
+        "period": "monthly"
+    }
+}
+
+9. Görev Kısmi Güncellemesi (PATCH)
+-----------------------------------
+PATCH /api/Task/683ddf63540cc09e61eddf4c
+Authorization: Bearer {token}
+Content-Type: application/json
+
+Request:
+{
+    "status": "Completed"
+}
+
+Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": {
+        "id": "683ddf63540cc09e61eddf4c",
+        "title": "Rapor Test Görevi 1",
+        "description": "Günlük raporda görünmeli",
+        "status": "Completed",
+        "priority": 3,
+        "created_at": "2025-06-02T17:29:07.877Z",
+        "user_id": "683da331c6442d28bb761de2",
+        "update_date": "2025-06-03T11:05:00Z",
+        "period": "daily"
+    }
+}
+
+10. Görev Silme
+---------------
+DELETE /api/Task/683ddf92540cc09e61eddf4e
+Authorization: Bearer {token}
+
+Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": "Task başarıyla silindi"
+}
+
+11. Period'a Göre Görev Filtreleme
+----------------------------------
+GET /api/Task/period/daily
+Authorization: Bearer {token}
+
+Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": [
+        {
+            "id": "683ddf63540cc09e61eddf4c",
+            "title": "Rapor Test Görevi 1",
+            "description": "Günlük raporda görünmeli",
+            "status": "Completed",
+            "priority": 3,
+            "period": "daily"
+        },
+        {
+            "id": "683ddf84540cc09e61eddf4d",
+            "title": "Standart Rapor",
+            "description": "Günlük standart raporu hazırla ve gönder",
+            "status": "Pending",
+            "priority": 2,
+            "period": "daily"
+        }
+    ]
+}
+
+GET /api/Task/period/weekly
+Authorization: Bearer {token}
+
+Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": [
+        {
+            "id": "683ddfad540cc09e61eddf4f",
+            "title": "Kod Review",
+            "description": "Geliştirilen özelliklerin kod incelemesi",
+            "status": "Pending",
+            "priority": 3,
+            "period": "weekly"
+        }
+    ]
+}
+
+REPORTING ENDPOINTS
+===================
+
+12. Günlük Rapor
+----------------
+GET /api/Report/daily
+Authorization: Bearer {token}
+
+Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": {
+        "period": "daily",
+        "date": "2025-06-03T00:00:00Z",
+        "total_tasks": 12,
+        "completed_tasks": 1,
+        "pending_tasks": 11,
+        "in_progress_tasks": 0,
+        "tasks": [
+            {
+                "id": "683ddf63540cc09e61eddf4c",
+                "title": "Rapor Test Görevi 1",
+                "status": "Completed",
+                "priority": 3
+            },
+            {
+                "id": "683ddf84540cc09e61eddf4d",
+                "title": "Standart Rapor",
+                "status": "Pending",
+                "priority": 2
+            }
+        ]
+    }
+}
+
+13. Haftalık Rapor
+------------------
+GET /api/Report/weekly
+Authorization: Bearer {token}
+
+Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": {
+        "period": "weekly",
+        "start_date": "2025-06-01T00:00:00Z",
+        "end_date": "2025-06-07T23:59:59Z",
+        "total_tasks": 6,
+        "completed_tasks": 0,
+        "pending_tasks": 6,
+        "in_progress_tasks": 0,
+        "tasks": [
+            {
+                "id": "683ddfad540cc09e61eddf4f",
+                "title": "Kod Review",
+                "status": "Pending",
+                "priority": 3
+            },
+            {
+                "id": "683ecdd7bf67ada830fda7be",
+                "title": "Haftalık Görev 1",
+                "status": "Pending",
+                "priority": 2
+            }
+        ]
+    }
+}
+
+14. Aylık Rapor
+---------------
+GET /api/Report/monthly
+Authorization: Bearer {token}
+
+Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": {
+        "period": "monthly",
+        "start_date": "2025-06-01T00:00:00Z",
+        "end_date": "2025-06-30T23:59:59Z",
+        "total_tasks": 1,
+        "completed_tasks": 0,
+        "pending_tasks": 1,
+        "in_progress_tasks": 0,
+        "tasks": [
+            {
+                "id": "683dcea99757e4025ca6693e",
+                "title": "Aylık Rapor Hazırlama",
+                "status": "Pending",
+                "priority": 3
+            }
+        ]
+    }
+}

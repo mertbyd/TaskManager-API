@@ -1,0 +1,580 @@
+==============================================================================
+                        TESTUSER KULLANICISI İÇİN DETAYLI TEST SENARYOLARI
+==============================================================================
+
+TESTUSER KULLANICI BİLGİLERİ
+=============================
+
+User ID: 683ecc35bf67ada830fda7b3
+Username: testuser
+Email: test@example.com
+Password: 123456 (hash: e10adc3949ba59abbe56e057f20f883e)
+
+TESTUSER'IN MEVCUT GÖREVLERİ
+============================
+
+Günlük Görevler (Daily):
+- 683ecd50bf67ada830fda7b4: Günlük Görev 1 - Her gün yapılması gereken rutin görev (Priority: 1)
+- 683ecd5bbf67ada830fda7b5: Günlük Görev 2 - Sabah kontrolü ve planlama (Priority: 2)
+- 683ecd6abf67ada830fda7b6: Günlük Görev 3 - Email kontrol ve yanıtlama (Priority: 3)
+- 683ecd73bf67ada830fda7b7: Günlük Görev 4 - Günlük rapor hazırlama (Priority: 1)
+- 683ecd7cbf67ada830fda7b8: Günlük Görev 5 - Veritabanı yedekleme kontrolü (Priority: 2)
+- 683ecd8bbf67ada830fda7b9: Günlük Görev 6 - Sistem performans kontrolü (Priority: 3)
+- 683ecd98bf67ada830fda7ba: Günlük Görev 7 - Müşteri geri bildirim takibi (Priority: 1)
+- 683ecdabbf67ada830fda7bb: Günlük Görev 8 - Sosyal medya güncellemeleri (Priority: 2)
+- 683ecdb8bf67ada830fda7bc: Günlük Görev 9 - Güvenlik log kontrolü (Priority: 3)
+- 683ecdcabf67ada830fda7bd: Günlük Görev 10 - Günlük hedef değerlendirmesi (Priority: 1)
+
+Haftalık Görevler (Weekly):
+- 683ecdd7bf67ada830fda7be: Haftalık Görev 1 - Haftalık proje durum toplantısı (Priority: 2)
+- 683ecde3bf67ada830fda7bf: Haftalık Görev 2 - Sistem güvenlik taraması (Priority: 3)
+- 683ece3bbf67ada830fda7c0: Haftalık Görev 3 - Müşteri memnuniyet anketi analizi (Priority: 1)
+- 683ece86bf67ada830fda7c1: Haftalık Görev 4 - Haftalık performans raporu (Priority: 2)
+- 683ece94bf67ada830fda7c2: Haftalık Görev 5 - Sunucu bakım ve güncelleme (Priority: 3)
+
+==============================================================================
+                            ADIM ADIM TEST SENARYOLARI
+==============================================================================
+
+1. AUTHENTICATION - TESTUSER GİRİŞİ
+====================================
+
+Step 1: Login İşlemi
+--------------------
+POST /api/Auth/login
+Content-Type: application/json
+
+Request:
+{
+    "username": "testuser",
+    "password": "123456"
+}
+
+Beklenen Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": {
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        "user_id": "683ecc35bf67ada830fda7b3",
+        "username": "testuser",
+        "email": "test@example.com"
+    }
+}
+
+***ÖNEMLİ: Bu token'ı kopyala ve tüm sonraki isteklerde kullan***
+
+Step 2: User Bilgisi Doğrulama
+------------------------------
+GET /api/Auth/getid/683ecc35bf67ada830fda7b3
+
+Beklenen Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": {
+        "id": "683ecc35bf67ada830fda7b3",
+        "username": "testuser",
+        "email": "test@example.com",
+        "created_at": "2025-06-03T10:19:33.310Z"
+    }
+}
+
+2. GÖREV LİSTELEME TESTLERİ
+===========================
+
+Step 3: Tüm Görevleri Listele
+-----------------------------
+GET /api/Task/my-tasks
+Authorization: Bearer {yukarıdaki_token}
+
+Beklenen Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": [
+        {
+            "id": "683ecd50bf67ada830fda7b4",
+            "title": "Günlük Görev 1",
+            "description": "Her gün yapılması gereken rutin görev",
+            "status": "Pending",
+            "priority": 1,
+            "created_at": "2025-06-03T10:24:16.814Z",
+            "user_id": "683ecc35bf67ada830fda7b3",
+            "update_date": "2025-06-03T10:24:16.814Z",
+            "period": "daily"
+        },
+        // ... diğer 14 görev
+    ]
+}
+
+Step 4: Belirli Görev Detayı
+----------------------------
+GET /api/Task/683ecd5bbf67ada830fda7b5
+Authorization: Bearer {token}
+
+Beklenen Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": {
+        "id": "683ecd5bbf67ada830fda7b5",
+        "title": "Günlük Görev 2",
+        "description": "Sabah kontrolü ve planlama",
+        "status": "Pending",
+        "priority": 2,
+        "created_at": "2025-06-03T10:24:27.784Z",
+        "user_id": "683ecc35bf67ada830fda7b3",
+        "update_date": "2025-06-03T10:24:27.784Z",
+        "period": "daily"
+    }
+}
+
+3. GÖREV GÜNCELLEME TESTLERİ
+============================
+
+Step 5: Tam Güncelleme (PUT) - Email Kontrol Görevini Güncelle
+--------------------------------------------------------------
+PUT /api/Task/683ecd6abf67ada830fda7b6
+Authorization: Bearer {token}
+Content-Type: application/json
+
+Request:
+{
+    "title": "Email Kontrolü ve Yanıtlama - Güncellenmiş",
+    "description": "Gelen emailları kontrol et, kategorize et ve öncelikli olanları yanıtla",
+    "priority": 2,
+    "status": "InProgress"
+}
+
+Beklenen Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": {
+        "id": "683ecd6abf67ada830fda7b6",
+        "title": "Email Kontrolü ve Yanıtlama - Güncellenmiş",
+        "description": "Gelen emailları kontrol et, kategorize et ve öncelikli olanları yanıtla",
+        "status": "InProgress",
+        "priority": 2,
+        "created_at": "2025-06-03T10:24:42.559Z",
+        "user_id": "683ecc35bf67ada830fda7b3",
+        "update_date": "2025-06-03T14:30:00Z",
+        "period": "daily"
+    }
+}
+
+Step 6: Güncelleme Sonrası Doğrulama
+------------------------------------
+GET /api/Task/683ecd6abf67ada830fda7b6
+Authorization: Bearer {token}
+
+Beklenen Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": {
+        "id": "683ecd6abf67ada830fda7b6",
+        "title": "Email Kontrolü ve Yanıtlama - Güncellenmiş",
+        "description": "Gelen emailları kontrol et, kategorize et ve öncelikli olanları yanıtla",
+        "status": "InProgress",
+        "priority": 2,
+        "created_at": "2025-06-03T10:24:42.559Z",
+        "user_id": "683ecc35bf67ada830fda7b3",
+        "update_date": "2025-06-03T14:30:00Z",
+        "period": "daily"
+    }
+}
+
+Step 7: Kısmi Güncelleme (PATCH) - Günlük Rapor Görevinin Status'unu Değiştir
+-----------------------------------------------------------------------------
+PATCH /api/Task/683ecd73bf67ada830fda7b7
+Authorization: Bearer {token}
+Content-Type: application/json
+
+Request:
+{
+    "status": "Completed"
+}
+
+Beklenen Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": {
+        "id": "683ecd73bf67ada830fda7b7",
+        "title": "Günlük Görev 4",
+        "description": "Günlük rapor hazırlama",
+        "status": "Completed",
+        "priority": 1,
+        "created_at": "2025-06-03T10:24:51.170Z",
+        "user_id": "683ecc35bf67ada830fda7b3",
+        "update_date": "2025-06-03T14:35:00Z",
+        "period": "daily"
+    }
+}
+
+Step 8: PATCH Sonrası Doğrulama
+-------------------------------
+GET /api/Task/683ecd73bf67ada830fda7b7
+Authorization: Bearer {token}
+
+Beklenen Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": {
+        "id": "683ecd73bf67ada830fda7b7",
+        "title": "Günlük Görev 4",
+        "description": "Günlük rapor hazırlama",
+        "status": "Completed",
+        "priority": 1,
+        "created_at": "2025-06-03T10:24:51.170Z",
+        "user_id": "683ecc35bf67ada830fda7b3",
+        "update_date": "2025-06-03T14:35:00Z",
+        "period": "daily"
+    }
+}
+
+4. BAŞKA GÖREVLERİ GÜNCELLEME TESTLERİ
+=====================================
+
+Step 9: Haftalık Görev Güncelleme - Sistem Güvenlik Taraması
+------------------------------------------------------------
+PUT /api/Task/683ecde3bf67ada830fda7bf
+Authorization: Bearer {token}
+Content-Type: application/json
+
+Request:
+{
+    "title": "Haftalık Kapsamlı Güvenlik Taraması",
+    "description": "Sistem güvenlik açıklarını tespit et, penetrasyon testleri yap ve rapor hazırla",
+    "priority": 3,
+    "status": "InProgress"
+}
+
+Beklenen Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": {
+        "id": "683ecde3bf67ada830fda7bf",
+        "title": "Haftalık Kapsamlı Güvenlik Taraması",
+        "description": "Sistem güvenlik açıklarını tespit et, penetrasyon testleri yap ve rapor hazırla",
+        "status": "InProgress",
+        "priority": 3,
+        "created_at": "2025-06-03T10:26:43.088Z",
+        "user_id": "683ecc35bf67ada830fda7b3",
+        "update_date": "2025-06-03T14:40:00Z",
+        "period": "weekly"
+    }
+}
+
+Step 10: Güncelleme Doğrulama
+-----------------------------
+GET /api/Task/683ecde3bf67ada830fda7bf
+Authorization: Bearer {token}
+
+Step 11: Priority Güncelleme - Sosyal Medya Görevini Düşük Prioriteye Çek
+-------------------------------------------------------------------------
+PATCH /api/Task/683ecdabbf67ada830fda7bb
+Authorization: Bearer {token}
+Content-Type: application/json
+
+Request:
+{
+    "priority": 1,
+    "status": "InProgress"
+}
+
+Beklenen Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": {
+        "id": "683ecdabbf67ada830fda7bb",
+        "title": "Günlük Görev 8",
+        "description": "Sosyal medya güncellemeleri",
+        "status": "InProgress",
+        "priority": 1,
+        "created_at": "2025-06-03T10:25:47.665Z",
+        "user_id": "683ecc35bf67ada830fda7b3",
+        "update_date": "2025-06-03T14:45:00Z",
+        "period": "daily"
+    }
+}
+
+Step 12: Priority Güncelleme Doğrulama
+--------------------------------------
+GET /api/Task/683ecdabbf67ada830fda7bb
+Authorization: Bearer {token}
+
+5. GÖREV SİLME TESTİ
+====================
+
+Step 13: Görev Silme - Güvenlik Log Kontrolü
+--------------------------------------------
+DELETE /api/Task/683ecdb8bf67ada830fda7bc
+Authorization: Bearer {token}
+
+Beklenen Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": "Task başarıyla silindi"
+}
+
+Step 14: Silme Doğrulama (404 olmalı)
+-------------------------------------
+GET /api/Task/683ecdb8bf67ada830fda7bc
+Authorization: Bearer {token}
+
+Beklenen Response (404):
+{
+    "success": false,
+    "error_message": "Task bulunamadı veya size ait değil",
+    "data": null
+}
+
+6. FİLTRELEME TESTLERİ
+======================
+
+Step 15: Günlük Görevleri Filtrele
+----------------------------------
+GET /api/Task/period/daily
+Authorization: Bearer {token}
+
+Beklenen Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": [
+        {
+            "id": "683ecd50bf67ada830fda7b4",
+            "title": "Günlük Görev 1",
+            "status": "Pending",
+            "priority": 1,
+            "period": "daily"
+        },
+        {
+            "id": "683ecd6abf67ada830fda7b6",
+            "title": "Email Kontrolü ve Yanıtlama - Güncellenmiş",
+            "status": "InProgress",
+            "priority": 2,
+            "period": "daily"
+        },
+        {
+            "id": "683ecd73bf67ada830fda7b7",
+            "title": "Günlük Görev 4",
+            "status": "Completed",
+            "priority": 1,
+            "period": "daily"
+        }
+        // ... diğer günlük görevler (9 silinen hariç 8 görev)
+    ]
+}
+
+Step 16: Haftalık Görevleri Filtrele
+------------------------------------
+GET /api/Task/period/weekly
+Authorization: Bearer {token}
+
+Beklenen Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": [
+        {
+            "id": "683ecdd7bf67ada830fda7be",
+            "title": "Haftalık Görev 1",
+            "status": "Pending",
+            "priority": 2,
+            "period": "weekly"
+        },
+        {
+            "id": "683ecde3bf67ada830fda7bf",
+            "title": "Haftalık Kapsamlı Güvenlik Taraması",
+            "status": "InProgress",
+            "priority": 3,
+            "period": "weekly"
+        }
+        // ... diğer haftalık görevler (toplam 5 görev)
+    ]
+}
+
+7. RAPORLAMA TESTLERİ
+=====================
+
+Step 17: Günlük Rapor
+--------------------
+GET /api/Report/daily
+Authorization: Bearer {token}
+
+Beklenen Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": {
+        "period": "daily",
+        "date": "2025-06-03T00:00:00Z",
+        "total_tasks": 9,
+        "completed_tasks": 1,
+        "pending_tasks": 7,
+        "in_progress_tasks": 1,
+        "tasks": [
+            {
+                "id": "683ecd50bf67ada830fda7b4",
+                "title": "Günlük Görev 1",
+                "status": "Pending",
+                "priority": 1
+            },
+            {
+                "id": "683ecd6abf67ada830fda7b6",
+                "title": "Email Kontrolü ve Yanıtlama - Güncellenmiş",
+                "status": "InProgress", 
+                "priority": 2
+            },
+            {
+                "id": "683ecd73bf67ada830fda7b7",
+                "title": "Günlük Görev 4",
+                "status": "Completed",
+                "priority": 1
+            }
+            // ... diğer günlük görevler
+        ]
+    }
+}
+
+Step 18: Haftalık Rapor
+----------------------
+GET /api/Report/weekly
+Authorization: Bearer {token}
+
+Beklenen Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": {
+        "period": "weekly",
+        "start_date": "2025-06-01T00:00:00Z",
+        "end_date": "2025-06-07T23:59:59Z",
+        "total_tasks": 5,
+        "completed_tasks": 0,
+        "pending_tasks": 4,
+        "in_progress_tasks": 1,
+        "tasks": [
+            {
+                "id": "683ecdd7bf67ada830fda7be",
+                "title": "Haftalık Görev 1",
+                "status": "Pending",
+                "priority": 2
+            },
+            {
+                "id": "683ecde3bf67ada830fda7bf",
+                "title": "Haftalık Kapsamlı Güvenlik Taraması",
+                "status": "InProgress",
+                "priority": 3
+            }
+            // ... diğer haftalık görevler
+        ]
+    }
+}
+
+8. YENİ GÖREV OLUŞTURMA
+=======================
+
+Step 19: Yeni Günlük Görev Oluştur
+----------------------------------
+POST /api/Task
+Authorization: Bearer {token}
+Content-Type: application/json
+
+Request:
+{
+    "title": "Test Sonrası Yeni Görev",
+    "description": "API testleri sonrasında oluşturulan yeni görev",
+    "priority": 2,
+    "period": "daily"
+}
+
+Beklenen Response (200):
+{
+    "success": true,
+    "error_message": "",
+    "data": {
+        "id": "ObjectId",
+        "title": "Test Sonrası Yeni Görev",
+        "description": "API testleri sonrasında oluşturulan yeni görev",
+        "priority": 2,
+        "status": "Pending",
+        "period": "daily",
+        "user_id": "683ecc35bf67ada830fda7b3",
+        "created_at": "2025-06-03T15:00:00Z",
+        "update_date": "2025-06-03T15:00:00Z"
+    }
+}
+
+Step 20: Yeni Görev Doğrulama
+-----------------------------
+GET /api/Task/my-tasks
+Authorization: Bearer {token}
+// Listede yeni görevin olduğunu kontrol et
+
+9. HATA DURUMU TESTLERİ
+=======================
+
+Step 21: Başkasının Görevine Erişim Denemesi
+--------------------------------------------
+GET /api/Task/683dcea99757e4025ca6693e
+Authorization: Bearer {token}
+// Bu admin kullanıcısının görevi
+
+Beklenen Response (404):
+{
+    "success": false,
+    "error_message": "Task bulunamadı veya size ait değil", 
+    "data": null
+}
+
+Step 22: Geçersiz ID ile İşlem
+-----------------------------
+GET /api/Task/invalid_task_id
+Authorization: Bearer {token}
+
+Beklenen Response (400 veya 404):
+{
+    "success": false,
+    "error_message": "Geçersiz task ID formatı",
+    "data": null
+}
+
+Step 23: Token Olmadan İşlem
+----------------------------
+GET /api/Task/my-tasks
+// Authorization header olmadan
+
+Beklenen Response (401):
+{
+    "success": false,
+    "error_message": "Unauthorized",
+    "data": null
+}
+
+==============================================================================
+                            TEST SONUÇLARININ DEĞERLENDİRİLMESİ
+==============================================================================
+
+Başarılı Test Kriterleri:
+✅ Testuser ile giriş yapabilmeli
+✅ Sadece kendi görevlerini görebilmeli (15 görev)
+✅ Görev güncellemeleri çalışmalı
+✅ Güncelleme sonrası GET ile doğrulama başarılı olmalı
+✅ PATCH işlemleri sadece istenen alanları değiştirmeli
+✅ Filtreleme doğru sonuçlar vermeli (9 daily, 5 weekly)
+✅ Raporlar doğru istatistikler içermeli
+✅ Başkasının görevlerine erişememeli
+✅ Hata durumları doğru handle edilmeli
+
+Bu test senaryoları ile API'nin tüm fonksiyonlarını testuser kullanıcısı 
+üzerinden kapsamlı şekilde test edebilir ve sistem güvenilirliğini 
+doğrulayabilirsiniz.
