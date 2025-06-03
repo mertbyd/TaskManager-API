@@ -164,6 +164,6 @@ NOTLAR
 ==============================================================================
 
 1. Tüm API istekleri JWT token gerektirmektedir.
-2. Rapor API'si şu anda sadece tarih parametresi ile filtrelemeye izin vermektedir.
+2. Rapor API'si tarih verilmezse bugünün tarihini alarak çıktı vermektedir    
 3. Günlük, haftalık ve aylık raporlar, ilgili zaman aralığında oluşturulan tüm görevleri içerir.
 4. Tarih parametresi verilmediğinde, bugün/bu hafta/bu ay için raporlar üretilir.
