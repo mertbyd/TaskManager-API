@@ -89,8 +89,6 @@ JwtService.cs
 - Priority: 1 (Düşük), 2 (Orta), 3 (Yüksek)
 - Period: "daily", "weekly", "monthly"
 - Status: "Pending", "InProgress", "Completed"
-- Username: 3-50 karakter, unique
-- Password: Minimum 6 karakter
 
 3. REPOSITORY KATMANI (Data Access Layer)
 ==========================================
